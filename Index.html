@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de PDF - Página Única</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+        }
+        #controls {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #file-input {
+            padding: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #pdf-canvas {
+            border: 1px solid #ccc;
+            background-color: white;
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            margin-top: 20px;
+        }
+        #page-info {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        #page-links {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .page-link {
+            padding: 5px 10px;
+            background-color: #e7e7e7;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .page-link:hover {
+            background-color: #d0d0d0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Leitor de PDF</h1>
+    <div id="controls">
+        <input type="file" id="file-input" accept="application/pdf">
+        <button id="prev-page">Página Anterior</button>
+        <button id="next-page">Próxima Página</button>
+        <span id="page-info">Página: <span id="page-num">1</span></span>
+    </div>
+    <canvas id="pdf-canvas"></canvas>
+    <div id="page-links"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const canvas = document.getElementById('pdf-canvas');
+        const context = canvas.getContext('2d');
+        const pageNumDisplay = document.getElementById('page-num');
+        const pageLinksContainer = document.getElementById('page-links');
+        let pdfDoc = null;
+        let currentPage = 1;
+
+        // Carregar a última página lida do localStorage
+        const lastPage = localStorage.getItem('lastPage');
+        if (lastPage) {
+            currentPage = parseInt(lastPage);
+        }
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                const fileReader = new FileReader();
+                fileReader.onload = function() {
+                    const typedarray = new Uint8Array(this.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                        pdfDoc = pdf;
+                        renderPageLinks(pdf.numPages);
+                        renderPage(currentPage);
+                    });
+                };
+                fileReader.readAsArrayBuffer(file);
+            } else {
+                alert('Por favor, selecione um arquivo PDF.');
+            }
+        });
+
+        function renderPage(num) {
+            pdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({ scale: 1 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                page.render(renderContext);
+                pageNumDisplay.textContent = num;
+
+                // Armazenar a última página lida
+                localStorage.setItem('lastPage', num);
+            });
+        }
+
+        function renderPageLinks(numPages) {
+            pageLinksContainer.innerHTML = ''; // Limpar links existentes
+            for (let i = 1; i <= numPages; i++) {
+                const link = document.createElement('div');
+                link.textContent = `Página ${i}`;
+                link.className = 'page-link';
+                link.addEventListener('click', () => {
+                    currentPage = i;
+                    renderPage(currentPage);
+                });
+                pageLinksContainer.appendChild(link);
+            }
+        }
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (pdfDoc && currentPage > 1) {
+                currentPage--;
+                renderPage(currentPage);
+            }
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (pdfDoc && currentPage < pdfDoc.numPages) {
+                currentPage++;
+                renderPage(currentPage);
+            }
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de PDF - Página Única</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+        }
+        #controls {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #file-input {
+            padding: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #pdf-canvas {
+            border: 1px solid #ccc;
+            background-color: white;
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            margin-top: 20px;
+        }
+        #page-info {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        #page-links {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .page-link {
+            padding: 5px 10px;
+            background-color: #e7e7e7;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .page-link:hover {
+            background-color: #d0d0d0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Leitor de PDF</h1>
+    <div id="controls">
+        <input type="file" id="file-input" accept="application/pdf">
+        <button id="prev-page">Página Anterior</button>
+        <button id="next-page">Próxima Página</button>
+        <span id="page-info">Página: <span id="page-num">1</span></span>
+    </div>
+    <canvas id="pdf-canvas"></canvas>
+    <div id="page-links"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const canvas = document.getElementById('pdf-canvas');
+        const context = canvas.getContext('2d');
+        const pageNumDisplay = document.getElementById('page-num');
+        const pageLinksContainer = document.getElementById('page-links');
+        let pdfDoc = null;
+        let currentPage = 1;
+
+        // Carregar a última página lida do localStorage
+        const lastPage = localStorage.getItem('lastPage');
+        if (lastPage) {
+            currentPage = parseInt(lastPage);
+        }
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                const fileReader = new FileReader();
+                fileReader.onload = function() {
+                    const typedarray = new Uint8Array(this.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                        pdfDoc = pdf;
+                        renderPageLinks(pdf.numPages);
+                        renderPage(currentPage);
+                    });
+                };
+                fileReader.readAsArrayBuffer(file);
+            } else {
+                alert('Por favor, selecione um arquivo PDF.');
+            }
+        });
+
+        function renderPage(num) {
+            pdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({ scale: 1 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                page.render(renderContext);
+                pageNumDisplay.textContent = num;
+
+                // Armazenar a última página lida
+                localStorage.setItem('lastPage', num);
+            });
+        }
+
+        function renderPageLinks(numPages) {
+            pageLinksContainer.innerHTML = ''; // Limpar links existentes
+            for (let i = 1; i <= numPages; i++) {
+                const link = document.createElement('div');
+                link.textContent = `Página ${i}`;
+                link.className = 'page-link';
+                link.addEventListener('click', () => {
+                    currentPage = i;
+                    renderPage(currentPage);
+                });
+                pageLinksContainer.appendChild(link);
+            }
+        }
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (pdfDoc && currentPage > 1) {
+                currentPage--;
+                renderPage(currentPage);
+            }
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (pdfDoc && currentPage < pdfDoc.numPages) {
+                currentPage++;
+                renderPage(currentPage);
+            }
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de PDF - Página Única</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+        }
+        #controls {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #file-input {
+            padding: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #pdf-canvas {
+            border: 1px solid #ccc;
+            background-color: white;
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            margin-top: 20px;
+        }
+        #page-info {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        #page-links {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .page-link {
+            padding: 5px 10px;
+            background-color: #e7e7e7;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .page-link:hover {
+            background-color: #d0d0d0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Leitor de PDF</h1>
+    <div id="controls">
+        <input type="file" id="file-input" accept="application/pdf">
+        <button id="prev-page">Página Anterior</button>
+        <button id="next-page">Próxima Página</button>
+        <span id="page-info">Página: <span id="page-num">1</span></span>
+    </div>
+    <canvas id="pdf-canvas"></canvas>
+    <div id="page-links"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const canvas = document.getElementById('pdf-canvas');
+        const context = canvas.getContext('2d');
+        const pageNumDisplay = document.getElementById('page-num');
+        const pageLinksContainer = document.getElementById('page-links');
+        let pdfDoc = null;
+        let currentPage = 1;
+
+        // Carregar a última página lida do localStorage
+        const lastPage = localStorage.getItem('lastPage');
+        if (lastPage) {
+            currentPage = parseInt(lastPage);
+        }
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                const fileReader = new FileReader();
+                fileReader.onload = function() {
+                    const typedarray = new Uint8Array(this.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                        pdfDoc = pdf;
+                        renderPageLinks(pdf.numPages);
+                        renderPage(currentPage);
+                    });
+                };
+                fileReader.readAsArrayBuffer(file);
+            } else {
+                alert('Por favor, selecione um arquivo PDF.');
+            }
+        });
+
+        function renderPage(num) {
+            pdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({ scale: 1 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                page.render(renderContext);
+                pageNumDisplay.textContent = num;
+
+                // Armazenar a última página lida
+                localStorage.setItem('lastPage', num);
+            });
+        }
+
+        function renderPageLinks(numPages) {
+            pageLinksContainer.innerHTML = ''; // Limpar links existentes
+            for (let i = 1; i <= numPages; i++) {
+                const link = document.createElement('div');
+                link.textContent = `Página ${i}`;
+                link.className = 'page-link';
+                link.addEventListener('click', () => {
+                    currentPage = i;
+                    renderPage(currentPage);
+                });
+                pageLinksContainer.appendChild(link);
+            }
+        }
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (pdfDoc && currentPage > 1) {
+                currentPage--;
+                renderPage(currentPage);
+            }
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (pdfDoc && currentPage < pdfDoc.numPages) {
+                currentPage++;
+                renderPage(currentPage);
+            }
+        });
+    </script>
+</body>
+</html>
